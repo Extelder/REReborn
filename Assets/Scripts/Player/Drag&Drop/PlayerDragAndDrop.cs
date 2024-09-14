@@ -7,28 +7,45 @@ public class PlayerDragAndDrop : RaycastBehaviour
 {
     [SerializeField] private Transform _dragPoint;
     [SerializeField] private float _throwForce;
+    [SerializeField] private float _resetDropDelay;
 
     private IDragDropped _currentDragDropped;
 
     private bool _pickuped;
+    private bool _canDrop;
+
+    private KeyCode _pickupKeyCode;
+    private KeyCode _dropKeyCode;
+    private KeyCode _throwKeyCode;
+
+    private void Start()
+    {
+        _pickupKeyCode = PlayerData.Instance.PlayerInputs.PickupObjectKeyCode;
+        _dropKeyCode = PlayerData.Instance.PlayerInputs.DropObjectKeyCode;
+        _throwKeyCode = PlayerData.Instance.PlayerInputs.ThrowObjectKeyCode;
+    }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse1))
+        if (Input.GetKeyDown(_dropKeyCode))
+        {
+            if ((_canDrop))
+                TryDrop();
+            Debug.Log(_canDrop);
+            Debug.Log(_currentDragDropped.Pickuped);
+        }
+
+        if (Input.GetKeyDown(_pickupKeyCode))
         {
             TryPickup();
         }
 
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            TryDrop();
-        }
 
-        if (Input.GetKeyDown(KeyCode.Mouse2))
+        if (Input.GetKeyDown(_throwKeyCode))
         {
             TryThrow();
         }
-        
+
         if (GetHitCollider(out Collider other))
         {
             if (other.TryGetComponent<IDragDropped>(out IDragDropped dragDropped))
@@ -50,9 +67,15 @@ public class PlayerDragAndDrop : RaycastBehaviour
 
         if (!_currentDragDropped.Pickuped)
         {
+            Invoke(nameof(ResetDrop), _resetDropDelay);
             _pickuped = true;
             _currentDragDropped.Pickup(_dragPoint);
         }
+    }
+
+    private void ResetDrop()
+    {
+        _canDrop = true;
     }
 
     public void TryThrow()
@@ -60,18 +83,20 @@ public class PlayerDragAndDrop : RaycastBehaviour
         if (_currentDragDropped == null)
             return;
 
+        _canDrop = false;
         if (_currentDragDropped.Pickuped)
         {
             _currentDragDropped.Throw(Camera.forward * _throwForce);
             _pickuped = false;
         }
     }
-    
+
     public void TryDrop()
     {
         if (_currentDragDropped == null)
             return;
 
+        _canDrop = false;
         if (_currentDragDropped.Pickuped)
         {
             _currentDragDropped.Drop();

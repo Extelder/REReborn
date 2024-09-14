@@ -28,6 +28,7 @@ public class DraggedObject : MonoBehaviour, IDragDropped
 
     public void Pickup(Transform pointToLerp)
     {
+        _rigidbody.velocity = new Vector3(0, 0, 0);
         StopAllCoroutines();
         _disposable.Clear();
 
@@ -72,7 +73,7 @@ public class DraggedObject : MonoBehaviour, IDragDropped
 
             Debug.Log(detectedPlayers);
 
-            if (detectedPlayers > 0)
+            if (!(detectedPlayers > 0))
             {
                 gameObject.layer = LayerMask.NameToLayer("Default");
                 yield break;
